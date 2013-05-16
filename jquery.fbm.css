@@ -1,0 +1,64 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+
+.fbm-container {
+  top: 0%;
+  left: 0%;
+  z-index: 2;
+  position: fixed;
+}
+
+.fbm-element .content {
+  top: 50%;
+  left: 50%;
+  width: 300px;
+  height: 300px;
+  margin: -150px 0 0 -150px;
+  position: absolute;
+  background: green;
+}
+
+.fbm-element.connected .content {
+  background: blue;
+}
+
+.fbm-background {
+  top: -25%;
+  left: -25%;
+  width: 150%;
+  height: 150%;
+  background: url(../gfx/starfield.jpg) no-repeat;
+  position: fixed;
+  z-index: 1;
+}
+
+a.fbm-connection {
+  width: 20px;
+  height: 20px;
+  margin-top: -0px;
+  margin-left: -0px;
+  display: block;
+  background: red;
+  position: absolute;
+  z-index: 100;
+}
+
+a.fbm-connection.loading {
+  background: yellow;
+}
+
+a.fbm-connection.loaded {
+  background: blue;
+}
+
+div.connections {
+  top: 75px;
+  left: 75px;
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  background: black;
+  margin: -10px 0px 0px -10px;
+}
