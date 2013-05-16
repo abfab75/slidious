@@ -1,6 +1,9 @@
 jQuery FlyByMenu
 =========
 
+Example:
+---
+
 Let me give you an example on how to use fbm to create a fully responsive website.
 First you will need to define some kind of sitemap. It should be a container with links inside.
 
@@ -33,3 +36,56 @@ The page will exactly as big as it will need to be.
 [0][0][0][0][0][3]
 [0][0][2][0][0][0]
 ```
+
+Options:
+---
+
+There is a bunch of options you can change. Check the list to see details:
+
+<table>
+  <tr>
+    <th>Option</th>
+    <th>Default</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>wrapper</td>
+    <td>''</td>
+    <td>
+      A css selector for your content wrapper in all linked pages.
+      If you define one, all other content will be ignored when loading pages.
+      I recommend using a wrapper, if you want to let your page degrade gracefully.
+    </td>
+  </tr>
+  <tr>
+    <td>autoScan</td>
+    <td>true</td>
+    <td>
+      Defines if fbm should automatically scan all newly added contents for links & add event handlers.
+      This is the default behaviour. If you deactivate this, you will have to process the links on your own.
+    </td>
+  </tr>
+  <tr>
+    <td>preload</td>
+    <td>'next'</td>
+    <td>
+      Defines which pages fbm should preload to provide a seemless user experience.
+      'linked': Preload all pages linked within the active content.
+      'all': Preload all pages on init.
+      Every other value will deactivate preloading. I recommend using an empty string.
+    </td>
+  </tr>
+</table>
+
+Callbacks:
+---
+
+onInit
+onEnter
+onLeave
+
+Methods:
+---
+
+islocal
+goto
