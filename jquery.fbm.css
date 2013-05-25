@@ -5,11 +5,13 @@
 }
 
 .fbm-element {
-  width: 100%;
-  height: 100%;
   position: absolute;
 }
 
 .fbm-hidden {
   display: none;
+}
+
+.fbm-active {
+  overflow-y: scroll;
 }
