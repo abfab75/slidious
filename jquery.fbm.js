@@ -1,165 +1,241 @@
 /**
- * jQuery - Fly By Menu
+ * @file
+ * jQuery FlyByMenu
+ *
+ * @author Christian Hanne <mail@christianhanne.de>
+ * @url www.christianhanne.de
  */
+(function($) {
+  "use strict";
 
-var fbmGrid = [];
-var fbmCols = 0;
-var fbmRows = 0;
+  $.fn.fbm = function(options, param1, param2) {
+    var $this = this,
+      $fbm = null,
+      maxX = 0,
+      maxY = 0,
+      methods = {},
+      settings = {
+        wrapper  : '',
+        autoScan : true,
+        preLoad  : 'linked',
+        anispeed : 500,
+        initUrl  : '',
+        links    : [],
+        onInit   : function() {},
+        onEnter  : function() {},
+        onLeave  : function() {},
+        onLoad   : function() {}
+      };
 
-var x_start = 0;
-var y_start = 0;
+    /**
+     * Starts the whole thing, sets the values & so on.
+     */
+    methods.init = function() {
+      settings = $.extend(settings, options);
 
-function fbm(fbmContainer) {
-  $(fbmContainer).find('a').each(function() {
-    var id = $(this).attr('id');
-    var id_arr = id.split('-');
-    
-    var x_coord = parseInt(id_arr[2]);
-    var y_coord = parseInt(id_arr[3]);
+      if ($('#fbm').size() === 0) {
+        $('a', $this).each(function() {
+          // Skip all links that lack either href or a position value.
+          if ($(this).attr('href') && $(this).attr('data-x') && $(this).attr('data-y')) {
+            var newObject = {
+              x : parseInt($(this).attr('data-x'), 10),
+              y : parseInt($(this).attr('data-y'), 10),
+              url : $.trim($(this).attr('href'))
+            };
 
-    if (typeof fbmGrid[x_coord] == 'undefined') {
-      fbmGrid[x_coord] = [];
+            if (settings.initHref === '' && index === 0) {
+              settings.initHref = newObject.url;
+            }
+
+            if ((newObject.x + 1) > maxX) {
+              maxX = newObject.x + 1;
+            }
+
+            if ((newObject.y + 1) > maxY) {
+              maxY = newObject.y + 1;
+            }
+
+            settings.links.push(newObject);
+          }
+        });
+
+        $this.addClass('fbm-hidden');
+
+        $fbm = $('<div>').attr('id', 'fbm').css({
+          width  : (maxX * 100) + '%',
+          height : (maxY * 100) + '%'
+        });
+
+        $('body').append($fbm);
+
+        for (var i in settings.links) {
+          $fbm.append($('<div>')
+            .attr('id', 'fbm-' + settings.links[i].x + '-' + settings.links[i].y)
+            .addClass('fbm-element')
+            .css({
+              width  : (100 / maxX) + '%',
+              height : (100 / maxY) + '%',
+              left   : (settings.links[i].x * 100) + '%',
+              top    : (settings.links[i].y * 100) + '%'
+            })
+            .data(settings.links[i]));
+        }
+
+        settings.onInit($this, settings);
+
+        methods.gotoHref(settings.initHref);
+      }
+    };
+
+    /**
+     * Returns the correct element for a given href value.
+     * The href value has to be exactly the same as the one stored.
+     *
+     * @param href
+     *   The href value we would like to search for.
+     */
+    methods.getElementByHref = function(href) {
+      var element = null;
+      href = $.trim(href) || '';
+      for (var i in settings.links) {
+        if (href === settings.links[i].url) {
+          element = $.extend({}, settings.links[i]);
+          break;
+        }
+      }
+
+      return element;
+    };
+
+    /**
+     * Returns the correct element for a given position.
+     *
+     * @param x
+     *   X-Position of the wanted element.
+     * @param y
+     *   Y-Position of the wanted element.
+     */
+    methods.getElementByPosition = function(x, y) {
+      var element = null;
+      for (var i in settings.links) {
+        if (x === settings.links[i].x && y === settings.links[i].y) {
+          element = $.extend({}, settings.links[i]);
+          break;
+        }
+      }
+
+      return element;
     }
 
-    fbmGrid[x_coord][y_coord] = new Array();
-    fbmGrid[x_coord][y_coord]['name'] = $(this).text();
-    fbmGrid[x_coord][y_coord]['path'] = $(this).attr('href');
-    fbmGrid[x_coord][y_coord]['conn'] = new Array();
+    /**
+     * Go to a given position by using the href of a link.
+     * This will only work if the link is registered inside the links array.
+     *
+     * @param href
+     *   The href we would like to go to.
+     */
+    methods.gotoHref = function(href) {
+      var element = methods.getElementByHref(href) || false;
+      if (element) {
+        methods.gotoElement(element);
+      }
+    };
 
-    var connections = $(this).attr('class');
-    var connections_arr = connections.split(' ');
-    for (var i = 0; i < connections_arr.length; i++) {
-      if (connections_arr[i] == 'default') {
-        x_start = x_coord;
-        y_start = y_coord;
+    /**
+     * Panes to an element, defined by href & x,y-position.
+     *
+     * @param element
+     *   An fbm link object.
+     */
+    methods.gotoElement = function(element) {
+      var $newElement = $('#fbm-' + element.x + '-' + element.y),
+        $oldElement = $('.fbm-active');
+
+      if ($newElement.hasClass('fbm-loaded')) {
+        settings.onLeave($this, $oldElement, $newElement);
+        $oldElement.removeClass('fbm-active');
+
+        $fbm.animate({
+          left : (-1 * element.y * 100) + '%',
+          top : (-1 * element.x * 100) + '%'
+        }, settings.speed, function() {
+          settings.onEnter($this, $oldElement, $newElement);
+
+          $newElement.addClass('fbm-active');
+        });
       }
       else {
-        var connection = connections_arr[i].split('-');
-        fbmGrid[x_coord][y_coord]['conn'][i] = new Array();
-        fbmGrid[x_coord][y_coord]['conn'][i]['x'] = parseInt(connection[2]);
-        fbmGrid[x_coord][y_coord]['conn'][i]['y'] = parseInt(connection[3]);
+        methods.preloadElements([element], element);
       }
-    }
-    
-    if ((x_coord + 1) > fbmCols) {
-      fbmCols = parseInt(x_coord) + 1;
-    }
+    };
 
-    if ((y_coord + 1) > fbmRows) {
-      fbmRows = parseInt(y_coord) + 1;
-    }
+    /**
+     *
+     */
+    methods.preloadElements = function(elements, gotoElement) {
+      var $newElement = null,
+        $oldElement = $('.fbm-active');
 
-    $(this).hide();
-  });
+      gotoElement = gotoElement || null;
+      for (var i in elements) {
+        $newElement = $('#fbm-' + elements[i].x + '-' + elements[i].y);
+        if (!$newElement.hasClass('fbm-loaded')) {
+          $newElement.addClass('fbm-loading').load(element.url + ' ' + settings.wrapper, function(data) {
+            $(this).removeClass('fbm-loading').addClass('fbm-loaded');
 
-  $(fbmContainer).css({
-    'top': '0%', 
-    'left': '0%', 
-    'width': (fbmCols * 100) + '%', 
-    'height': (fbmRows * 100) + '%',
-    'position': 'fixed'
-  });
+            if (settings.autoScan === true) {
+              $newElement.find('a').not('.fbm-scanned')
+              .click(function(e) {
+                var element = methods.getElementByHref($(this).attr('href'));
+                if (element !== null) {
+                  methods.gotoElement(element);
+                  e.preventDefault();
+                }
+              })
+              .each(function() {
+                $(this).addClass('fbm-scanned');
+                var element = methods.getElementByHref($(this).attr('href'));
+                if (element !== null) {
+                  elements.push(element);
+                }
+              });
 
-  var elem_width = 100 / fbmCols;
-  var elem_height = 100 / fbmRows;
+              if (settings.preLoad === 'linked') {
+                methods.preloadElements(elements);
+              }
+            }
 
-  // Now render all elements.
-  for (var x = 0; x < fbmCols; x++) {
-    if (typeof fbmGrid[x] != 'undefined') {
-      for (var y = 0; y < fbmRows; y++) {
-        if (typeof fbmGrid[x][y] != 'undefined') {
-          $('<div/>').attr({'id': 'fbm-element-' + x + '-' + y}).addClass('fbm-element').css({
-            'top': (y * elem_height) + '%',
-            'left': (x * elem_width) + '%',
-            'width': elem_width + '%',
-            'height': elem_height + '%',
-            'position': 'absolute'
-          }).html('<div class="content"></div>').appendTo(fbmContainer);
+            settings.onLoad($this, $oldElement, $newElement);
+            if (gotoElement.x === elements[i].x && gotoElement.y === elements[i].y) {
+              methods.gotoElement(elements[i]);
+            }
+          });
         }
       }
     }
-  }
 
-  gotoElement(x_start, y_start);
-}
+    switch(options) {
+      case 'islocal':
+        return (methods.getElementByHref(params) !== null);
 
-function gotoElement(x, y, speed) {
-  var speed = 1000;
+      case 'goto':
+        var element = null;
+        if (param1 && param2) {
+          element = methods.getElementByPosition(param1, param2);
+        }
+        else if (param1) {
+          element = methods.getElementByHref(param1);
+        }
 
-  $('#fbm-menu').animate({
-    'top': (-1 * y * 100) + '%', 
-    'left': (-1 * x * 100) + '%'
-  }, speed, 'easeOutQuad', function() {
-    if (!$('#fbm-element-' + x + '-' + y).hasClass('connected')) {
-      renderConnections(x, y);
+        if (element !== null) {
+          methods.gotoElement(element);
+        }
+        break;
+
+      default:
+        methods.init();
     }
-  });
-}
 
-function renderConnections(x, y) {
-  $('<div/>').addClass('connections').appendTo('#fbm-element-' + x + '-' + y);
-
-  var connections = fbmGrid[x][y]['conn'];
-  for (var i = 0; i < connections.length; i++) {
-    renderConnection(x, y, connections[i]['x'], connections[i]['y']);
-  }
-
-  $('#fbm-element-' + x + '-' + y).addClass('connected');
-}
-
-function renderConnection(xA, yA, xB, yB){
-  if ($('.fbm-connection-' + xB + '-' + yB).hasClass('connected')) {
-    return;
-  }
-
-  $('<a/>')
-    .attr({'id': 'fbm-connection-' + xA + '-' + yA + '-' + xB + '-' + yB})
-    .addClass('fbm-connection fbm-connection-' + xB + '-' + yB)
-    .html(fbmGrid[xB][yB]['name'])
-    .appendTo('#fbm-element-' + xA + '-' + yA + ' .connections');
-  
-  $('#fbm-connection-' + xA + '-' + yA + '-' + xB + '-' + yB).addClass('loading');
-
-  $('#fbm-connection-' + xA + '-' + yA + '-' + xB + '-' + yB).animate({'top': 50, 'left': 0}, 600, function() {
-    var arc_params = {
-      center: [0,0],  
-      radius: 50,    
-      start: 0,
-      end: calcAngle(xA, yA, xB, yB),
-      dir: 1
-    }
-      
-    $(this).animate({path : new $.path.arc(arc_params)}, 2000, function() {
-      $(this).attr('onclick', 'gotoElement(' + xB + ', ' + yB + '); return false;');
-      $(this).removeClass('loading');
-      $(this).addClass('loaded');
-    });
-  });
-}
-
-function calcAngle(xA, yA, xB, yB) {
-  var width = parseFloat($(window).width());
-  var height = parseFloat($(window).height());
-
-  var m = ((yB - yA) * height) / ((xB - xA) * width);
-  var angle = ((Math.atan(m) / Math.PI) * -180);
-  
-  if (yA >= yB && xB >= xA) {
-    angle+= 90;
-  }
-  else if (yA >= yB && xB < xA) {
-    angle+= 270;
-  }
-  else if (yA < yB && xB < xA) {
-    angle-= 90;
-  }
-  else if (yA < yB && xB >= xA) {
-    angle+= 90;
-  }
-
-  return angle;
-}
-
-$(document).ready(function() {
-  fbm('#fbm-menu');
-});
+    return $this;
+  };
+}(jQuery));
