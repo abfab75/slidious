@@ -20,6 +20,7 @@
         preLoad  : 'linked',
         anispeed : 500,
         initUrl  : '',
+        hideMenu : true,
         links    : [],
         onInit   : function() {},
         onEnter  : function() {},
@@ -34,32 +35,34 @@
       settings = $.extend(settings, options);
 
       if ($('#fbm').size() === 0) {
-        $('a', $this).each(function() {
-          // Skip all links that lack either href or a position value.
+        $('a', $this).each(function(index) {
+          // Skip all links that lack either url or a position value.
           if ($(this).attr('href') && $(this).attr('data-x') && $(this).attr('data-y')) {
-            var newObject = {
+            var newElement = {
               x : parseInt($(this).attr('data-x'), 10),
               y : parseInt($(this).attr('data-y'), 10),
               url : $.trim($(this).attr('href'))
             };
 
-            if (settings.initHref === '' && index === 0) {
-              settings.initHref = newObject.url;
+            if (settings.initUrl === '' && index === 0) {
+              settings.initUrl = newElement.url;
             }
 
-            if ((newObject.x + 1) > maxX) {
-              maxX = newObject.x + 1;
+            if ((newElement.x + 1) > maxX) {
+              maxX = newElement.x + 1;
             }
 
-            if ((newObject.y + 1) > maxY) {
-              maxY = newObject.y + 1;
+            if ((newElement.y + 1) > maxY) {
+              maxY = newElement.y + 1;
             }
 
-            settings.links.push(newObject);
+            settings.links.push(newElement);
           }
         });
 
-        $this.addClass('fbm-hidden');
+        if (settings.hideMenu === true) {
+          $this.addClass('fbm-hidden');
+        }
 
         $fbm = $('<div>').attr('id', 'fbm').css({
           width  : (maxX * 100) + '%',
@@ -69,38 +72,47 @@
         $('body').append($fbm);
 
         for (var i in settings.links) {
-          $fbm.append($('<div>')
-            .attr('id', 'fbm-' + settings.links[i].x + '-' + settings.links[i].y)
-            .addClass('fbm-element')
-            .css({
-              width  : (100 / maxX) + '%',
-              height : (100 / maxY) + '%',
-              left   : (settings.links[i].x * 100) + '%',
-              top    : (settings.links[i].y * 100) + '%'
-            })
-            .data(settings.links[i]));
+          if (settings.links.hasOwnProperty(i)) {
+            $fbm.append($('<div>')
+              .attr('id', 'fbm-' + settings.links[i].x + '-' + settings.links[i].y)
+              .addClass('fbm-element')
+              .data(settings.links[i])
+              .css({
+                width  : (100 / maxX) + '%',
+                height : (100 / maxY) + '%',
+                left   : (settings.links[i].x * (100 / maxX)) + '%',
+                top    : (settings.links[i].y * (100 / maxY)) + '%'
+              })
+              .append($('<div>').addClass('fbm-content'))
+            );
+          }
         }
 
         settings.onInit($this, settings);
+        if (settings.preLoad === 'all') {
+          methods.preloadElements(settings.links);
+        }
 
-        methods.gotoHref(settings.initHref);
+        methods.gotoUrl(settings.initUrl);
       }
     };
 
     /**
-     * Returns the correct element for a given href value.
-     * The href value has to be exactly the same as the one stored.
+     * Returns the correct element for a given url value.
+     * The url value has to be exactly the same as the one stored.
      *
-     * @param href
-     *   The href value we would like to search for.
+     * @param url
+     *   The url value we would like to search for.
      */
-    methods.getElementByHref = function(href) {
+    methods.getElementByUrl = function(url) {
       var element = null;
-      href = $.trim(href) || '';
+      url = $.trim(url) || '';
       for (var i in settings.links) {
-        if (href === settings.links[i].url) {
-          element = $.extend({}, settings.links[i]);
-          break;
+        if (settings.links.hasOwnProperty(i)) {
+          if (url === settings.links[i].url) {
+            element = $.extend({}, settings.links[i]);
+            break;
+          }
         }
       }
 
@@ -118,31 +130,33 @@
     methods.getElementByPosition = function(x, y) {
       var element = null;
       for (var i in settings.links) {
-        if (x === settings.links[i].x && y === settings.links[i].y) {
-          element = $.extend({}, settings.links[i]);
-          break;
+        if (settings.links.hasOwnProperty(i)) {
+          if (x === settings.links[i].x && y === settings.links[i].y) {
+            element = $.extend({}, settings.links[i]);
+            break;
+          }
         }
       }
 
       return element;
-    }
+    };
 
     /**
-     * Go to a given position by using the href of a link.
+     * Go to a given position by using the url of a link.
      * This will only work if the link is registered inside the links array.
      *
-     * @param href
-     *   The href we would like to go to.
+     * @param url
+     *   The url we would like to go to.
      */
-    methods.gotoHref = function(href) {
-      var element = methods.getElementByHref(href) || false;
+    methods.gotoUrl = function(url) {
+      var element = methods.getElementByUrl(url) || false;
       if (element) {
         methods.gotoElement(element);
       }
     };
 
     /**
-     * Panes to an element, defined by href & x,y-position.
+     * Panes to an element, defined by url & x,y-position.
      *
      * @param element
      *   An fbm link object.
@@ -156,8 +170,8 @@
         $oldElement.removeClass('fbm-active');
 
         $fbm.animate({
-          left : (-1 * element.y * 100) + '%',
-          top : (-1 * element.x * 100) + '%'
+          top  : (-1 * element.y * 100) + '%',
+          left : (-1 * element.x * 100) + '%'
         }, settings.speed, function() {
           settings.onEnter($this, $oldElement, $newElement);
 
@@ -173,50 +187,60 @@
      *
      */
     methods.preloadElements = function(elements, gotoElement) {
-      var $newElement = null,
-        $oldElement = $('.fbm-active');
+      var $oldElement = $('.fbm-active');
 
-      gotoElement = gotoElement || null;
+      gotoElement = gotoElement || {};
       for (var i in elements) {
-        $newElement = $('#fbm-' + elements[i].x + '-' + elements[i].y);
-        if (!$newElement.hasClass('fbm-loaded')) {
-          $newElement.addClass('fbm-loading').load(element.url + ' ' + settings.wrapper, function(data) {
-            $(this).removeClass('fbm-loading').addClass('fbm-loaded');
+        if (elements.hasOwnProperty(i)) {
+          var $newElement = $('#fbm-' + elements[i].x + '-' + elements[i].y);
+          if (!$newElement.hasClass('fbm-loading') && !$newElement.hasClass('fbm-loaded')) {
+            $newElement.addClass('fbm-loading');
+            $.get(elements[i].url, function(data) {
+              var preloadElements = [],
+                $content = $('<div>').html(data),
+                $newElement = $('#fbm-' + elements[i].x + '-' + elements[i].y);
 
-            if (settings.autoScan === true) {
-              $newElement.find('a').not('.fbm-scanned')
-              .click(function(e) {
-                var element = methods.getElementByHref($(this).attr('href'));
-                if (element !== null) {
-                  methods.gotoElement(element);
-                  e.preventDefault();
-                }
-              })
-              .each(function() {
-                $(this).addClass('fbm-scanned');
-                var element = methods.getElementByHref($(this).attr('href'));
-                if (element !== null) {
-                  elements.push(element);
-                }
-              });
-
-              if (settings.preLoad === 'linked') {
-                methods.preloadElements(elements);
+              if (settings.wrapper) {
+                $content = $content.find(settings.wrapper);
               }
-            }
 
-            settings.onLoad($this, $oldElement, $newElement);
-            if (gotoElement.x === elements[i].x && gotoElement.y === elements[i].y) {
-              methods.gotoElement(elements[i]);
-            }
-          });
+              $content.appendTo($newElement.find('.fbm-content'));
+              $newElement.removeClass('fbm-loading').addClass('fbm-loaded');
+              if (settings.autoScan === true) {
+                $newElement.find('a').not('.fbm-scanned')
+                .click(function(e) {
+                  var element = methods.getElementByUrl($(this).attr('href'));
+                  if (element !== null) {
+                    methods.gotoElement(element);
+                    e.preventDefault();
+                  }
+                })
+                .each(function() {
+                  $(this).addClass('fbm-scanned');
+                  var element = methods.getElementByUrl($(this).attr('href'));
+                  if (element !== null) {
+                    preloadElements.push(element);
+                  }
+                });
+
+                if (settings.preLoad === 'linked') {
+                  methods.preloadElements(preloadElements);
+                }
+              }
+
+              settings.onLoad($this, $oldElement, $newElement);
+              if (gotoElement.x === elements[i].x && gotoElement.y === elements[i].y) {
+                methods.gotoElement(elements[i]);
+              }
+            }, 'html');
+          }
         }
       }
-    }
+    };
 
     switch(options) {
       case 'islocal':
-        return (methods.getElementByHref(params) !== null);
+        return (methods.getElementByUrl(param1) !== null);
 
       case 'goto':
         var element = null;
@@ -224,7 +248,7 @@
           element = methods.getElementByPosition(param1, param2);
         }
         else if (param1) {
-          element = methods.getElementByHref(param1);
+          element = methods.getElementByUrl(param1);
         }
 
         if (element !== null) {
