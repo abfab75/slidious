@@ -1,5 +1,17 @@
-jQuery FlyByMenu
+jQuery FlyByMenu (jQueryFBM)
 =========
+
+jQuery FlyByMenu is a plugin for creating a fancy responsive, ajaxified Website.
+It's pretty much an experiment and a fun project of myself. Anyway I thought this
+might be useful for someone for really special usecases.
+
+For example this could be the base for creating a responsive website,
+a presentation or a game with a starship travelling from one planet to another.
+
+FBMs basic feature is, that it creates the website itself from a supplied sitemap or an array of links & positions.
+It stays fully responsive, because all containers are created & animated using percentage values.
+
+Check below for further details and don't hesitate to ask questions.
 
 Example:
 ---
@@ -7,7 +19,7 @@ Example:
 Let me give you an example on how to use fbm to create a fully responsive website.
 First you will need to define some kind of sitemap. It should be a container with links inside.
 
-You will have to apply two custom attributes per <a>-element: data-x & data-y.
+You will have to apply two custom attributes per A-element: data-x & data-y.
 These attributes describe the position the links contents should be placed.
 
 ```html
@@ -18,17 +30,14 @@ These attributes describe the position the links contents should be placed.
 <a href="page-4.html" data-x="4" data-y="1">Link 4</a>
 </div>
 ```
-After defining our sitemap (and creating the additional pages of course), you can run fbm on the sitemap.
-The wrapper element of your pages' contents is mandatory. Other contents on the linked pages will be ignored.
+After defining our sitemap (and creating the additional pages of course), you can run fbm on it.
 
 ```javascript
-$('#menu').fbm({
-  wrapper : '#container'
-});
+$('#menu').fbm();
 ```
 
 Your resulting page will look like this. Note that the position is measured from the top-left corner, starting with 0.
-The page will exactly as big as it will need to be.
+The page will be exactly as big as it needs to be.
 
 ```html
 [1][0][0][0][0][0]
@@ -40,7 +49,7 @@ The page will exactly as big as it will need to be.
 Options:
 ---
 
-There is a bunch of options you can change. Check the list to see details:
+There is a bunch of options you can change. Check the list below for details:
 
 <table>
   <tr>
@@ -66,26 +75,146 @@ There is a bunch of options you can change. Check the list to see details:
     </td>
   </tr>
   <tr>
-    <td>preload</td>
-    <td>'next'</td>
+    <td>preLoad</td>
+    <td>'linked'</td>
     <td>
-      Defines which pages fbm should preload to provide a seemless user experience.
-      'linked': Preload all pages linked within the active content.
-      'all': Preload all pages on init.
-      Every other value will deactivate preloading. I recommend using an empty string.
+      Defines which pages fbm should preload to provide a seemless user experience.<br>
+      Possible values:<br>
+      <strong>'linked':</strong> Preload all pages linked within the active content.<br>
+      <strong>'all':</strong> Preload all pages on init.<br>
+      <strong>'':</strong> Preloading deactived. Page will be loaded after entering.
     </td>
+  </tr>
+  <tr>
+    <td>aniSpeed</td>
+    <td>500</td>
+    <td>How fast should we go? This is the animation speed for all element-to-element-transitions.</td>
+  </tr>
+  <tr>
+    <td>links</td>
+    <td>[]</td>
+    <td>
+      Provide an array of objects with values for x, y & url added. These will be added to your sitemap's links.
+      It is also possible to skip the sitemap entirely and just use this array. Call like this: <strong>$.fbm(yourOptions);</strong>
+    </td>
+  </tr>
+  <tr>
+    <td>initUrl</td>
+    <td>''</td>
+    <td>The Url this page should start with. By default this is the first url of the links array.</td>
   </tr>
 </table>
 
 Callbacks:
 ---
 
-onInit
-onEnter
-onLeave
+This is a list of all available callbacks. The params should be understandable without further explanation (except: $ marks variables as jQuery objects).
+
+<table>
+  <tr>
+    <th>Function</th>
+    <th>Params</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>onInit</td>
+    <td>settings</td>
+    <td>Called right after fbm is initialized. You will be able to modify the settings object.</td>
+  </tr>
+  <tr>
+    <td>onEnter</td>
+    <td>settings<br>$oldElement<br>$newElement</td>
+    <td>Called right after entering an element.</td>
+  </tr>
+  <tr>
+    <td>onLeave</td>
+    <td>settings<br>$oldElement<br>$newElement</td>
+    <td>Called right before leaving an element.</td>
+  </tr>
+  <tr>
+    <td>onLoad</td>
+    <td>settings<br>$oldElement<br>$element</td>
+    <td>Called after successfully preloading an element's contents.</td>
+  </tr>
+</table>
 
 Methods:
 ---
 
-islocal
-goto
+There are some methods you may use to communicate with jQueryFBM.
+
+<table>
+  <tr>
+    <th>Function</th>
+    <th>Params</th>
+    <th>Description</th>
+    <th>Example</th>
+  </tr>
+  <tr>
+    <td>local</td>
+    <td>url</td>
+    <td>Checks if a provided url is part of the jQueryFBM sitemap. Returns true or false.</td>
+    <td>$('#yourSitemap').fbm('local', 'path/to/content.html');</td>
+  </tr>
+  <tr>
+    <td>goto</td>
+    <td>x & y or url</td>
+    <td>Let's fbm scroll to the provided location and/or element container.</td>
+    <td>
+      $('#yourSitemap').fbm('goto', 1, 3);<br>
+      $('#yourSitemap').fbm('goto', 'path/to/content.html');
+    </td>
+  </tr>
+</table>
+
+Note that it is also possible to skip the sitemap & call these functions directly using <strong>$.fbm()</strong>.
+
+
+Markup & CSS Selectors:
+---
+
+Just for your (& my) information: The basic html markup & css selector usage.
+
+```html
+<div id="fbm-container">
+  <div class="fbm-element [fbm-loading|fbm-loaded]">
+    <div class="fbm-content">[PAGE CONTENT]</div>
+  </div>
+  <div class="fbm-element [fbm-loading|fbm-loaded]">
+    <div class="fbm-content">[PAGE CONTENT]</div>
+  </div>
+  ...
+</div>
+```
+
+<table>
+  <tr><td>Selector</td><td>Usage</td></tr>
+  <tr>
+    <td>#fbm</td>
+    <td>Unique ID of the fbm container.</td>
+  </tr>
+  <tr>
+    <td>.fbm-element</td>
+    <td>Every element will get this class.</td>
+  </tr>
+  <tr>
+    <td>.fbm-content</td>
+    <td>Wrapper element for every elements' content.</td>
+  </tr>
+  <tr>
+    <td>.fbm-hidden</td>
+    <td>Added to the provided sitemap if available. Kind of self explanatory, isn't it?</td>
+  </tr>
+  <tr>
+    <td>.fbm-loading</td>
+    <td>Added to the corresponding .fbm-element when trying to load it's contents.</td>
+  </tr>
+  <tr>
+    <td>.fbm-loaded</td>
+    <td>Added to the corresponding .fbm-element as soon as content is loaded.</td>
+  </tr>
+  <tr>
+    <td>.fbm-scanned</td>
+    <td>Added to all links inside an fbm-element after scanning (& preloading) them.</td>
+  </tr>
+</table>
