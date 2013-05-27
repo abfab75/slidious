@@ -1,0 +1,36 @@
+{
+    "name": "slidious",
+    "title": "jQuery Slidious",
+    "description": "Creates a responsive website from a single sitemap-like menu using ajax & full page scrolling.",
+    "keywords": [
+        "slidious",
+        "responsive",
+        "ajax",
+        "scroll"
+    ],
+    "version": "0.9.0",
+    "author": {
+        "name": "Christian Hanne",
+        "url": "http://www.christianhanne.de"
+    },
+    "maintainers": [
+        {
+            "name": "Christian Hanne",
+            "email": "mail@christianhanne.de",
+            "url": "http://www.christianhanne.de"
+        }
+    ],
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "https://github.com/christianhanne/slidious/blob/master/LICENSE.txt"
+        }
+    ],
+    "bugs": "https://github.com/christianhanne/slidious/issues",
+    "homepage": "https://github.com/christianhanne/slidious",
+    "docs": "https://github.com/christianhanne/slidious",
+    "download": "https://github.com/christianhanne/slidious",
+    "dependencies": {
+        "jquery": ">=1.5"
+    }
+}
