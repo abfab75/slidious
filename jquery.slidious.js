@@ -2,6 +2,7 @@
  * @file
  * jQuery Slidious
  *
+ * @version 0.9.0
  * @author Christian Hanne <mail@christianhanne.de>
  * @url http://www.christianhanne.de
  */
@@ -202,9 +203,10 @@
           if (!$newElement.hasClass('slidious-loading') && !$newElement.hasClass('slidious-loaded')) {
             $newElement.addClass('slidious-loading');
             $.get(elements[i].url, function(data) {
-              var preloadElements = [],
+              var currentElement = methods.getElementByUrl(this.url),
+                preloadElements = [],
                 $content = $('<div>').html(data),
-                $newElement = $('#slidious-' + elements[i].x + '-' + elements[i].y);
+                $newElement = $('#slidious-' + currentElement.x + '-' + currentElement.y);
 
               if (settings.wrapper) {
                 $content = $content.find(settings.wrapper);
@@ -212,6 +214,7 @@
 
               $content.appendTo($newElement.find('.slidious-content'));
               $newElement.removeClass('slidious-loading').addClass('slidious-loaded');
+
               if (settings.autoScan === true) {
                 $newElement.find('a').not('.slidious-scanned')
                 .click(function(e) {
@@ -228,14 +231,14 @@
                     preloadElements.push(element);
                   }
                 });
-
-                if (settings.preLoad === 'linked') {
-                  methods.preloadElements(preloadElements);
-                }
               }
 
               settings.onLoad($this, $oldElement, $newElement);
               if (gotoElement.x === elements[i].x && gotoElement.y === elements[i].y) {
+                if (settings.preLoad === 'linked') {
+                  methods.preloadElements(preloadElements);
+                }
+
                 methods.gotoElement(elements[i]);
               }
             }, 'html');
