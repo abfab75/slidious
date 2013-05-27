@@ -1,16 +1,16 @@
 /**
  * @file
- * jQuery FlyByMenu
+ * jQuery Slidious
  *
  * @author Christian Hanne <mail@christianhanne.de>
- * @url www.christianhanne.de
+ * @url http://www.christianhanne.de
  */
 (function($) {
   "use strict";
 
-  $.fn.fbm = function(options, param1, param2) {
+  $.fn.slidious = function(options, param1, param2) {
     var $this = this,
-      $fbm = null,
+      $slidious = null,
       maxX = 0,
       maxY = 0,
       methods = {},
@@ -34,7 +34,7 @@
     methods.init = function() {
       settings = $.extend(settings, options);
 
-      if ($('#fbm').size() === 0) {
+      if ($('#slidious').size() === 0) {
         $('a', $this).each(function(index) {
           // Skip all links that lack either url or a position value.
           if ($(this).attr('href') && $(this).attr('data-x') && $(this).attr('data-y')) {
@@ -61,29 +61,35 @@
         });
 
         if (settings.hideMenu === true) {
-          $this.addClass('fbm-hidden');
+          $this.addClass('slidious-hidden').css({
+            display : 'none'
+          });
         }
 
-        $fbm = $('<div>').attr('id', 'fbm').css({
-          width  : (maxX * 100) + '%',
-          height : (maxY * 100) + '%'
+        $slidious = $('<div>').attr('id', 'slidious').css({
+          top      : 0,
+          left     : 0,
+          width    : (maxX * 100) + '%',
+          height   : (maxY * 100) + '%',
+          position : 'fixed'
         });
 
-        $('body').append($fbm);
+        $('body').append($slidious);
 
         for (var i in settings.links) {
           if (settings.links.hasOwnProperty(i)) {
-            $fbm.append($('<div>')
-              .attr('id', 'fbm-' + settings.links[i].x + '-' + settings.links[i].y)
-              .addClass('fbm-element')
+            $slidious.append($('<div>')
+              .attr('id', 'slidious-' + settings.links[i].x + '-' + settings.links[i].y)
+              .addClass('slidious-element')
               .data(settings.links[i])
               .css({
-                width  : (100 / maxX) + '%',
-                height : (100 / maxY) + '%',
-                left   : (settings.links[i].x * (100 / maxX)) + '%',
-                top    : (settings.links[i].y * (100 / maxY)) + '%'
+                width    : (100 / maxX) + '%',
+                height   : (100 / maxY) + '%',
+                left     : (settings.links[i].x * (100 / maxX)) + '%',
+                top      : (settings.links[i].y * (100 / maxY)) + '%',
+                position : 'absolute'
               })
-              .append($('<div>').addClass('fbm-content'))
+              .append($('<div>').addClass('slidious-content'))
             );
           }
         }
@@ -159,23 +165,23 @@
      * Panes to an element, defined by url & x,y-position.
      *
      * @param element
-     *   An fbm link object.
+     *   An slidious link object.
      */
     methods.gotoElement = function(element) {
-      var $newElement = $('#fbm-' + element.x + '-' + element.y),
-        $oldElement = $('.fbm-active');
+      var $newElement = $('#slidious-' + element.x + '-' + element.y),
+        $oldElement = $('.slidious-active');
 
-      if ($newElement.hasClass('fbm-loaded')) {
+      if ($newElement.hasClass('slidious-loaded')) {
         settings.onLeave($this, $oldElement, $newElement);
-        $oldElement.removeClass('fbm-active');
+        $oldElement.removeClass('slidious-active');
 
-        $fbm.animate({
+        $slidious.animate({
           top  : (-1 * element.y * 100) + '%',
           left : (-1 * element.x * 100) + '%'
         }, settings.speed, function() {
           settings.onEnter($this, $oldElement, $newElement);
 
-          $newElement.addClass('fbm-active');
+          $newElement.addClass('slidious-active');
         });
       }
       else {
@@ -187,27 +193,27 @@
      *
      */
     methods.preloadElements = function(elements, gotoElement) {
-      var $oldElement = $('.fbm-active');
+      var $oldElement = $('.slidious-active');
 
       gotoElement = gotoElement || {};
       for (var i in elements) {
         if (elements.hasOwnProperty(i)) {
-          var $newElement = $('#fbm-' + elements[i].x + '-' + elements[i].y);
-          if (!$newElement.hasClass('fbm-loading') && !$newElement.hasClass('fbm-loaded')) {
-            $newElement.addClass('fbm-loading');
+          var $newElement = $('#slidious-' + elements[i].x + '-' + elements[i].y);
+          if (!$newElement.hasClass('slidious-loading') && !$newElement.hasClass('slidious-loaded')) {
+            $newElement.addClass('slidious-loading');
             $.get(elements[i].url, function(data) {
               var preloadElements = [],
                 $content = $('<div>').html(data),
-                $newElement = $('#fbm-' + elements[i].x + '-' + elements[i].y);
+                $newElement = $('#slidious-' + elements[i].x + '-' + elements[i].y);
 
               if (settings.wrapper) {
                 $content = $content.find(settings.wrapper);
               }
 
-              $content.appendTo($newElement.find('.fbm-content'));
-              $newElement.removeClass('fbm-loading').addClass('fbm-loaded');
+              $content.appendTo($newElement.find('.slidious-content'));
+              $newElement.removeClass('slidious-loading').addClass('slidious-loaded');
               if (settings.autoScan === true) {
-                $newElement.find('a').not('.fbm-scanned')
+                $newElement.find('a').not('.slidious-scanned')
                 .click(function(e) {
                   var element = methods.getElementByUrl($(this).attr('href'));
                   if (element !== null) {
@@ -216,7 +222,7 @@
                   }
                 })
                 .each(function() {
-                  $(this).addClass('fbm-scanned');
+                  $(this).addClass('slidious-scanned');
                   var element = methods.getElementByUrl($(this).attr('href'));
                   if (element !== null) {
                     preloadElements.push(element);
@@ -254,12 +260,12 @@
         if (element !== null) {
           methods.gotoElement(element);
         }
-        break;
+
+        return $slidious;
 
       default:
         methods.init();
+        return $slidious;
     }
-
-    return $this;
   };
 }(jQuery));
