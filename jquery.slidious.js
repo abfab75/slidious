@@ -2,9 +2,10 @@
  * @file
  * jQuery Slidious
  *
- * @version 0.9.0
+ * @version 0.9.1
  * @author Christian Hanne <mail@christianhanne.de>
- * @url http://www.christianhanne.de
+ * @link http://www.christianhanne.de
+ * @link http://demo.christianhanne.de/jquery_slidious
  */
 (function($) {
   "use strict";
@@ -33,50 +34,58 @@
      * Starts the whole thing, sets the values & so on.
      */
     methods.init = function() {
-      settings = $.extend(settings, options);
-
       if ($('#slidious').size() === 0) {
-        $('a', $this).each(function(index) {
+        settings = $.extend(settings, options);
+
+        // These two arrays will be used as comparison arrays.
+        // The alternative of searching each array on each
+        // check seemed to be two expensive.
+        settings.elemsByPos = {};
+        settings.elemsByUrl = {};
+
+        $('a', $this).each(function() {
           // Skip all links that lack either url or a position value.
           if ($(this).attr('href') && $(this).attr('data-x') && $(this).attr('data-y')) {
             var newElement = {
               x : parseInt($(this).attr('data-x'), 10),
               y : parseInt($(this).attr('data-y'), 10),
               url : $.trim($(this).attr('href'))
-            };
+            },
+            readableX = newElement.x + 1,
+            readableY = newElement.y + 1,
+            elementId = settings.links.length;
 
-            if (settings.initUrl === '' && index === 0) {
-              settings.initUrl = newElement.url;
-            }
-
-            if ((newElement.x + 1) > maxX) {
-              maxX = newElement.x + 1;
-            }
-
-            if ((newElement.y + 1) > maxY) {
-              maxY = newElement.y + 1;
-            }
+            maxX = (readableX > maxX) ? readableX : maxX;
+            maxY = (readableY > maxY) ? readableY : maxY;
 
             settings.links.push(newElement);
+            settings.elemsByPos[newElement.x + '-' + newElement.y] = elementId;
+            settings.elemsByUrl[encodeURIComponent(newElement.url)] = elementId;
           }
         });
 
+        if (settings.initUrl === '' && settings.links.length > 0) {
+          settings.initUrl = settings.links[0].url;
+        }
+
         if (settings.hideMenu === true) {
-          $this.addClass('slidious-hidden').css({
+          $this.css({
             display : 'none'
           });
         }
 
-        $slidious = $('<div>').attr('id', 'slidious').css({
-          top      : 0,
-          left     : 0,
-          width    : (maxX * 100) + '%',
-          height   : (maxY * 100) + '%',
-          position : 'fixed'
-        });
+        $slidious = $('<div>')
+          .attr('id', 'slidious')
+          .data('slidious', settings)
+          .css({
+            top      : 0,
+            left     : 0,
+            width    : (maxX * 100) + '%',
+            height   : (maxY * 100) + '%',
+            position : 'fixed'
+          });
 
         $('body').append($slidious);
-
         for (var i in settings.links) {
           if (settings.links.hasOwnProperty(i)) {
             $slidious.append($('<div>')
@@ -84,23 +93,29 @@
               .addClass('slidious-element')
               .data(settings.links[i])
               .css({
+                top      : (settings.links[i].y * (100 / maxY)) + '%',
+                left     : (settings.links[i].x * (100 / maxX)) + '%',
                 width    : (100 / maxX) + '%',
                 height   : (100 / maxY) + '%',
-                left     : (settings.links[i].x * (100 / maxX)) + '%',
-                top      : (settings.links[i].y * (100 / maxY)) + '%',
                 position : 'absolute'
               })
-              .append($('<div>').addClass('slidious-content'))
+              .append($('<div>')
+                .addClass('slidious-content'))
             );
           }
         }
 
+        // Changeable callback function, check readme for definition.
         settings.onInit($this, settings);
         if (settings.preLoad === 'all') {
           methods.preloadElements(settings.links);
         }
 
         methods.gotoUrl(settings.initUrl);
+      }
+      else {
+        $slidious = $('#slidious');
+        settings = $slidious.data('slidious');
       }
     };
 
@@ -112,15 +127,14 @@
      *   The url value we would like to search for.
      */
     methods.getElementByUrl = function(url) {
-      var element = null;
-      url = $.trim(url) || '';
-      for (var i in settings.links) {
-        if (settings.links.hasOwnProperty(i)) {
-          if (url === settings.links[i].url) {
-            element = $.extend({}, settings.links[i]);
-            break;
-          }
-        }
+      var element = null,
+        elementId = null;
+
+      url = encodeURIComponent($.trim(url)) || '';
+
+      elementId = settings.elemsByUrl[url];
+      if (elementId) {
+        element = $.extend({}, settings.links[elementId]);
       }
 
       return element;
@@ -135,14 +149,12 @@
      *   Y-Position of the wanted element.
      */
     methods.getElementByPosition = function(x, y) {
-      var element = null;
-      for (var i in settings.links) {
-        if (settings.links.hasOwnProperty(i)) {
-          if (x === settings.links[i].x && y === settings.links[i].y) {
-            element = $.extend({}, settings.links[i]);
-            break;
-          }
-        }
+      var element = null,
+        elementId = null;
+
+      elementId = settings.elemsByPos[x + '-' + y];
+      if (elementId) {
+        element = $.extend({}, settings.links[elementId]);
       }
 
       return element;
@@ -173,6 +185,7 @@
         $oldElement = $('.slidious-active');
 
       if ($newElement.hasClass('slidious-loaded')) {
+        // Changeable callback function, check readme for definition.
         settings.onLeave($this, $oldElement, $newElement);
         $oldElement.removeClass('slidious-active');
 
@@ -180,6 +193,7 @@
           top  : (-1 * element.y * 100) + '%',
           left : (-1 * element.x * 100) + '%'
         }, settings.speed, function() {
+          // Changeable callback function, check readme for definition.
           settings.onEnter($this, $oldElement, $newElement);
 
           $newElement.addClass('slidious-active');
@@ -191,7 +205,12 @@
     };
 
     /**
+     * Checks and preloads an array of slidious elements.
      *
+     * @param elements
+     *   An array of slidious elements defined by x, y and url.
+     * @param gotoElement
+     *   If defined slidious will scroll to this element after preloading it.
      */
     methods.preloadElements = function(elements, gotoElement) {
       var $oldElement = $('.slidious-active');
@@ -232,8 +251,9 @@
                   }
                 });
               }
-
+              // Changeable callback function, check readme for definition.
               settings.onLoad($this, $oldElement, $newElement);
+
               if (gotoElement.x === elements[i].x && gotoElement.y === elements[i].y) {
                 if (settings.preLoad === 'linked') {
                   methods.preloadElements(preloadElements);
@@ -263,7 +283,6 @@
         if (element !== null) {
           methods.gotoElement(element);
         }
-
         return $slidious;
 
       default:
