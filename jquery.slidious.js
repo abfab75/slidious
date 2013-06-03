@@ -2,7 +2,7 @@
  * @file
  * jQuery Slidious
  *
- * @version 0.9.1
+ * @version 0.9.2
  * @author Christian Hanne <mail@christianhanne.de>
  * @link http://www.christianhanne.de
  * @link http://demo.christianhanne.de/jquery_slidious
