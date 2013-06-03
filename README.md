@@ -13,8 +13,16 @@ It stays fully responsive, because all containers are created & animated using p
 
 Check below for further details and don't hesitate to ask questions.
 
+Browser Support:
+---
+
+Supports: <strong>Firefox, Safari, Chrome, Opera, IE8+</strong>. Should also work on most mobile browsers.<br />
+Please use the issue queue if you encounter any browser specific problems.
+
 Example:
 ---
+
+Demo: http://demo.christianhanne.de/jquery_slidious
 
 Let me give you an example on how to use Slidious to create a fully responsive website.
 First you will need to define some kind of sitemap. It should be a container with links inside.
@@ -176,7 +184,7 @@ Markup & CSS Selectors:
 Just for your (& my) information: The basic html markup & css selector usage.
 
 ```html
-<div id="slidious-container">
+<div id="slidious">
   <div class="slidious-element [slidious-loading|slidious-loaded]">
     <div class="slidious-content">[PAGE CONTENT]</div>
   </div>
@@ -200,10 +208,6 @@ Just for your (& my) information: The basic html markup & css selector usage.
   <tr>
     <td>.slidious-content</td>
     <td>Wrapper element for every elements' content.</td>
-  </tr>
-  <tr>
-    <td>.slidious-hidden</td>
-    <td>Added to the provided sitemap if available. Kind of self explanatory, isn't it?</td>
   </tr>
   <tr>
     <td>.slidious-loading</td>
