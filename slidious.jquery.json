@@ -7,14 +7,13 @@
         "responsive",
         "ajax",
         "scroll",
-        "navigation",
-
+        "navigation"
     ],
     "version": "0.9.1",
     "author": {
         "name": "Christian Hanne",
         "url": "http://www.christianhanne.de",
-        "email": "mail@christianhanne.de",
+        "email": "mail@christianhanne.de"
     },
     "licenses": [
         {
