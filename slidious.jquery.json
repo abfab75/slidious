@@ -6,20 +6,16 @@
         "slidious",
         "responsive",
         "ajax",
-        "scroll"
+        "scroll",
+        "navigation",
+
     ],
-    "version": "0.9.0",
+    "version": "0.9.1",
     "author": {
         "name": "Christian Hanne",
-        "url": "http://www.christianhanne.de"
+        "url": "http://www.christianhanne.de",
+        "email": "mail@christianhanne.de",
     },
-    "maintainers": [
-        {
-            "name": "Christian Hanne",
-            "email": "mail@christianhanne.de",
-            "url": "http://www.christianhanne.de"
-        }
-    ],
     "licenses": [
         {
             "type": "MIT",
@@ -30,7 +26,8 @@
     "homepage": "https://github.com/christianhanne/slidious",
     "docs": "https://github.com/christianhanne/slidious",
     "download": "https://github.com/christianhanne/slidious",
+    "demo": "http://demo.christianhanne.de/jquery_slidious",
     "dependencies": {
-        "jquery": ">=1.5"
+        "jquery": ">=1.2"
     }
 }
