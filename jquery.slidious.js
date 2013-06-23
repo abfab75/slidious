@@ -18,6 +18,7 @@
       methods = {},
       settings = {
         wrapper  : '',
+        wrapInit : false,
         autoScan : true,
         preLoad  : 'linked',
         anispeed : 500,
@@ -64,7 +65,10 @@
           }
         });
 
-        if (settings.initUrl === '' && settings.links.length > 0) {
+        if (settings.initUrl === '' && settings.wrapInit === true) {
+          settings.initUrl = location.href;
+        }
+        else if (settings.initUrl === '' && settings.links.length > 0) {
           settings.initUrl = settings.links[0].url;
         }
 
@@ -85,23 +89,36 @@
             position : 'fixed'
           });
 
-        $('body').append($slidious);
+        // If slidious should wrap the existing content instead
+        // of just appending it's containe to the body.
+        var $container = $('body');
+        if (settings.wrapInit !== true) {
+          $container.append($slidious);
+        }
+        else {
+          var element = methods.getElementByUrl(settings.initUrl);
+          if (element) {
+            if (settings.wrapper !== '') {
+              $container = $container.find(settings.wrapper);
+            }
+
+            var $initElement = methods.getJQueryElement(element);
+            $initElement.find('.slidious-content')
+              .append($('<div>').html($container.html()));
+
+            $slidious.append($initElement);
+            $container.html('').append($slidious);
+          }
+        }
+
+        var $newElement = null;
         for (var i in settings.links) {
           if (settings.links.hasOwnProperty(i)) {
-            $slidious.append($('<div>')
-              .attr('id', 'slidious-' + settings.links[i].x + '-' + settings.links[i].y)
-              .addClass('slidious-element')
-              .data(settings.links[i])
-              .css({
-                top      : (settings.links[i].y * (100 / maxY)) + '%',
-                left     : (settings.links[i].x * (100 / maxX)) + '%',
-                width    : (100 / maxX) + '%',
-                height   : (100 / maxY) + '%',
-                position : 'absolute'
-              })
-              .append($('<div>')
-                .addClass('slidious-content'))
-            );
+            // Only add elements that are not already present.
+            if ($('#slidious-' + settings.links[i].x + '-' + settings.links[i].y).size() === 0) {
+              $newElement = methods.getJQueryElement(settings.links[i]);
+              $slidious.append($newElement);
+            }
           }
         }
 
@@ -117,6 +134,27 @@
         $slidious = $('#slidious');
         settings = $slidious.data('slidious');
       }
+    };
+
+    /**
+     * Helper function that creates a jquery object from a slidious element.
+     *
+     * @param element
+     *   A slidious link object.
+     */
+    methods.getJQueryElement = function(element) {
+      return $('<div>').attr('id', 'slidious-' + element.x + '-' + element.y)
+        .addClass('slidious-element')
+        .data(element)
+        .css({
+          top      : (element.y * (100 / maxY)) + '%',
+          left     : (element.x * (100 / maxX)) + '%',
+          width    : (100 / maxX) + '%',
+          height   : (100 / maxY) + '%',
+          position : 'absolute'
+        })
+        .append($('<div>')
+          .addClass('slidious-content'));
     };
 
     /**
@@ -178,7 +216,7 @@
      * Panes to an element, defined by url & x,y-position.
      *
      * @param element
-     *   An slidious link object.
+     *   A slidious link object.
      */
     methods.gotoElement = function(element) {
       var $newElement = $('#slidious-' + element.x + '-' + element.y),
