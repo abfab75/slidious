@@ -2,7 +2,7 @@
  * @file
  * jQuery Slidious
  *
- * @version 0.9.2
+ * @version 0.9.3
  * @author Christian Hanne <mail@christianhanne.de>
  * @link http://www.christianhanne.de
  * @link http://demo.christianhanne.de/jquery_slidious
@@ -171,7 +171,7 @@
       url = encodeURIComponent($.trim(url)) || '';
 
       elementId = settings.elemsByUrl[url];
-      if (elementId) {
+      if (elementId !== null) {
         element = $.extend({}, settings.links[elementId]);
       }
 
@@ -191,7 +191,7 @@
         elementId = null;
 
       elementId = settings.elemsByPos[x + '-' + y];
-      if (elementId) {
+      if (elementId !== null) {
         element = $.extend({}, settings.links[elementId]);
       }
 
